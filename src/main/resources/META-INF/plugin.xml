@@ -1,0 +1,37 @@
+<idea-plugin>
+    <id>com.weakviord.filetagger</id>
+    <name>File Tagger</name>
+    <vendor email="wzq961021@gmail.com">weakviord</vendor>
+
+    <description><![CDATA[
+        File Tagger plugin for GoLand.
+        
+        Features:
+        <ul>
+            <li>Add, edit, and remove tags for files and directories</li>
+            <li>Tags are displayed in different colors in the project view</li>
+            <li>Supports both light and dark themes</li>
+            <li>Easy tag management through context menu</li>
+        </ul>
+    ]]></description>
+
+    <!-- 只保留必要的依赖 -->
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.lang</depends>
+    <depends>com.intellij.modules.go</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <projectService serviceImplementation="com.weakviord.filetagger.service.TagStorageService"/>
+        <projectViewNodeDecorator implementation="com.weakviord.filetagger.ui.FileTagDecorator"/>
+    </extensions>
+
+    <actions>
+        <action id="FileTagger.EditTags" 
+                class="com.weakviord.filetagger.action.EditTagsAction" 
+                text="Edit Tags" 
+                description="Edit tags for selected file or directory"
+                icon="AllIcons.Actions.Edit">
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
+        </action>
+    </actions>
+</idea-plugin> 
