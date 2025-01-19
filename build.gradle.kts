@@ -59,6 +59,10 @@ tasks {
     publishPlugin {
         token.set(System.getenv("PUBLISH_TOKEN") ?: "your token")
     }
+
+    processResources {
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    }
 }
 
 sourceSets {

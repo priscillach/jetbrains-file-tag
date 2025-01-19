@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.weakviord.filetagger</id>
     <name>File Tagger</name>
-    <vendor email="wzq961021@gmail.com">weakviord</vendor>
+    <vendor>weakviord</vendor>
 
     <description><![CDATA[
         File Tagger plugin for GoLand.
@@ -21,15 +21,15 @@
     <depends>com.intellij.modules.go</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <projectService serviceImplementation="com.weakviord.filetagger.service.TagStorageService"/>
         <projectViewNodeDecorator implementation="com.weakviord.filetagger.ui.FileTagDecorator"/>
+        <projectService serviceImplementation="com.weakviord.filetagger.service.TagStorageService"/>
     </extensions>
 
     <actions>
-        <action id="FileTagger.EditTags" 
-                class="com.weakviord.filetagger.action.EditTagsAction" 
-                text="Edit Tags" 
-                description="Edit tags for selected file or directory"
+        <action id="FileTagger.EditTags"
+                class="com.weakviord.filetagger.action.EditTagsAction"
+                text="Edit Tags"
+                description="Edit tags for the selected file"
                 icon="AllIcons.Actions.Edit">
             <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
         </action>
