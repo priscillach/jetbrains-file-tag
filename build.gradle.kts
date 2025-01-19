@@ -59,4 +59,15 @@ tasks {
     publishPlugin {
         token.set(System.getenv("PUBLISH_TOKEN") ?: "your token")
     }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs("src/main/java")
+        }
+        resources {
+            srcDirs("src/main/resources")
+        }
+    }
 } 
