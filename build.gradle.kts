@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.weakviord"
-version = "1.0.0"
+version = "1.0.3"
 
 repositories {
     mavenCentral()
@@ -76,11 +76,20 @@ tasks {
     }
 
     publishPlugin {
-        token.set(System.getenv("PUBLISH_TOKEN") ?: "your token")
+        token.set(System.getenv("PUBLISH_TOKEN") ?: "perm-WmhvbnFnaV9XZW4=.OTItMTE2MDk=.pQT9H0Ebvigip9BJQpjXZkBy3S4AW5")
     }
 
     processResources {
         duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    }
+
+    register<Exec>("verifyPluginLocally") {
+        dependsOn("buildPlugin")
+        commandLine("./verify-plugin.sh")
+        
+        doFirst {
+            mkdir("build/reports/verification")
+        }
     }
 }
 

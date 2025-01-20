@@ -66,11 +66,6 @@ public class FileTagDecorator implements ProjectViewNodeDecorator {
         }
     }
 
-    @Override
-    public void decorate(@NotNull PackageDependenciesNode node, @NotNull ColoredTreeCellRenderer cellRenderer) {
-        // 这个方法已经被标记为过时，但我们仍需要实现它
-    }
-
     private Color getTagColor(String tag) {
         // 根据标签生成一个稳定的颜色
         int hash = tag.hashCode();

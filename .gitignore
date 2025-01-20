@@ -30,3 +30,13 @@ out/
 # OS-specific files
 .DS_Store
 Thumbs.db 
+
+# Temp file
+temp/
+temp/**/*
+
+# Tools
+tools/
+
+# VSCode file
+.vscode/
