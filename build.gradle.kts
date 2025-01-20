@@ -76,7 +76,7 @@ tasks {
     }
 
     publishPlugin {
-        token.set(System.getenv("PUBLISH_TOKEN") ?: "perm-WmhvbnFnaV9XZW4=.OTItMTE2MDk=.pQT9H0Ebvigip9BJQpjXZkBy3S4AW5")
+        token.set(System.getenv("PUBLISH_TOKEN") ?: "your token")
     }
 
     processResources {
