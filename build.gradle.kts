@@ -12,8 +12,13 @@ repositories {
 
 intellij {
     version.set("2023.1")
-    type.set("GO")
-    plugins.set(listOf())
+    type.set("IC")
+    plugins.set(listOf(
+        "java",
+        "platform-images",
+        "properties",
+        "yaml"
+    ))
 
     sandboxDir.set("${project.buildDir}/idea-sandbox")
     updateSinceUntilBuild.set(false)
@@ -34,19 +39,33 @@ tasks {
         sinceBuild.set("231")
         untilBuild.set("243.*")
         pluginDescription.set("""
-            File Tagger plugin for GoLand.
+            File Tagger plugin for JetBrains IDEs.
             
             Features:
             - Add, edit, and remove tags for files and directories
             - Tags are displayed in different colors in the project view
             - Supports both light and dark themes
             - Easy tag management through context menu
+            
+            Supported IDEs:
+            - IntelliJ IDEA
+            - WebStorm
+            - PyCharm
+            - PhpStorm
+            - GoLand
+            - Rider
+            - CLion
+            - RubyMine
+            - AppCode
+            - DataGrip
+            - Android Studio
         """.trimIndent())
         changeNotes.set("""
             Initial release:
             - Basic tag management functionality
             - Colorful tag display
             - Context menu integration
+            - Support for all JetBrains IDEs
         """.trimIndent())
     }
 
@@ -57,7 +76,7 @@ tasks {
     }
 
     publishPlugin {
-        token.set(System.getenv("PUBLISH_TOKEN") ?: "your token")
+        token.set(System.getenv("PUBLISH_TOKEN") ?: "perm-WmhvbnFnaV9XZW4=.OTItMTE2MDk=.pQT9H0Ebvigip9BJQpjXZkBy3S4AW5")
     }
 
     processResources {

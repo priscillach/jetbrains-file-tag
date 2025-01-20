@@ -4,7 +4,7 @@
     <vendor>weakviord</vendor>
 
     <description><![CDATA[
-        File Tagger plugin for GoLand.
+        File Tagger plugin for JetBrains IDEs.
         
         Features:
         <ul>
@@ -13,12 +13,34 @@
             <li>Supports both light and dark themes</li>
             <li>Easy tag management through context menu</li>
         </ul>
+        
+        Supported IDEs:
+        <ul>
+            <li>IntelliJ IDEA</li>
+            <li>WebStorm</li>
+            <li>PyCharm</li>
+            <li>PhpStorm</li>
+            <li>GoLand</li>
+            <li>Rider</li>
+            <li>CLion</li>
+            <li>RubyMine</li>
+            <li>AppCode</li>
+            <li>DataGrip</li>
+            <li>Android Studio</li>
+        </ul>
     ]]></description>
 
-    <!-- 只保留必要的依赖 -->
+    <!-- 修改依赖，只保留基础平台依赖 -->
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.lang</depends>
-    <depends>com.intellij.modules.go</depends>
+
+    <!-- 可选依赖，根据不同 IDE 自动启用 -->
+    <depends optional="true">com.intellij.modules.java</depends>
+    <depends optional="true">com.intellij.modules.python</depends>
+    <depends optional="true">com.intellij.modules.go</depends>
+    <depends optional="true">com.intellij.modules.php</depends>
+    <depends optional="true">com.intellij.modules.ruby</depends>
+    <depends optional="true">com.intellij.modules.rider</depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <projectViewNodeDecorator implementation="com.weakviord.filetagger.ui.FileTagDecorator"/>
