@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.weakviord"
-version = "1.0.4"
+version = "1.0.5"
 
 repositories {
     mavenCentral()
@@ -43,22 +43,9 @@ tasks {
             
             Features:
             - Add, edit, and remove tags for files and directories
+            - Customize tag colors with support for transparency
             - Tags are displayed in different colors in the project view
-            - Supports both light and dark themes
             - Easy tag management through context menu
-            
-            Supported IDEs:
-            - IntelliJ IDEA
-            - WebStorm
-            - PyCharm
-            - PhpStorm
-            - GoLand
-            - Rider
-            - CLion
-            - RubyMine
-            - AppCode
-            - DataGrip
-            - Android Studio
         """.trimIndent())
         changeNotes.set("""
             Initial release:

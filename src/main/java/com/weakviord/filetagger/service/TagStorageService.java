@@ -6,6 +6,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ide.projectView.ProjectView;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import com.intellij.util.xmlb.annotations.Transient;
 
 import java.awt.Color;
 import java.util.*;
@@ -25,24 +26,40 @@ public final class TagStorageService implements PersistentStateComponent<TagStor
 
     public static class TagInfo {
         public String name;
-        public long timestamp;  // 最后修改时间
-        public float colorHue;  // 保存颜色的色相值
-        public long order;      // 创建顺序
+        public long timestamp;
+        public float colorHue;
+        public float colorSaturation = 0.7f;
+        public float colorBrightness = 0.9f;
+        public float colorAlpha = 1.0f;  // 添加透明度，1.0表示完全不透明
+        public long order;
 
+        // 用于序列化的无参构造函数
         public TagInfo() {
-            // 用于序列化
         }
 
         public TagInfo(String name) {
             this.name = name;
             this.timestamp = System.currentTimeMillis();
-            this.order = System.currentTimeMillis();  // 使用时间戳作为顺序
+            this.order = System.currentTimeMillis();
             int hash = name.hashCode();
             this.colorHue = ((hash * 31 + System.nanoTime()) & 0xFFFF) / (float)0xFFFF;
         }
 
+        @Transient
         public Color getColor() {
-            return Color.getHSBColor(colorHue, 0.7f, 0.9f);
+            Color hsbColor = Color.getHSBColor(colorHue, colorSaturation, colorBrightness);
+            int alpha = Math.round(colorAlpha * 255);
+            return new Color(hsbColor.getRed(), hsbColor.getGreen(), hsbColor.getBlue(), alpha);
+        }
+
+        @Transient
+        public void setColor(Color color) {
+            float[] hsb = Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), null);
+            this.colorHue = hsb[0];
+            this.colorSaturation = hsb[1];
+            this.colorBrightness = hsb[2];
+            this.colorAlpha = color.getAlpha() / 255.0f;
+            this.timestamp = System.currentTimeMillis();
         }
     }
 
@@ -96,11 +113,12 @@ public final class TagStorageService implements PersistentStateComponent<TagStor
             return false;
         }
 
-        // 更新标签信息，保持原有属性
+        // 更新标签信息，保持所有原有属性
         TagInfo tagInfo = myState.availableTags.remove(oldTag);
         tagInfo.name = newTag;
         tagInfo.timestamp = System.currentTimeMillis();
-        // 不修改 colorHue 和 order
+        // 保持所有颜色属性和创建顺序不变
+        // colorHue, colorSaturation, colorBrightness, order 保持原值
         myState.availableTags.put(newTag, tagInfo);
 
         // 更新所有文件的标签

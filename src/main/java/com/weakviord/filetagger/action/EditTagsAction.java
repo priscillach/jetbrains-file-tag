@@ -30,7 +30,6 @@ public class EditTagsAction extends AnAction {
         VirtualFile file = getTargetFile(e);
         
         if (project == null || file == null) {
-            LOG.info("Action not performed: project=" + project + ", file=" + file);
             return;
         }
 
