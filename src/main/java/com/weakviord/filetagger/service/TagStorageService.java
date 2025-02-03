@@ -7,6 +7,11 @@ import com.intellij.ide.projectView.ProjectView;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import com.intellij.util.xmlb.annotations.Transient;
+import com.intellij.openapi.vfs.VirtualFileListener;
+import com.intellij.openapi.vfs.VirtualFileManager;
+import com.intellij.openapi.vfs.VirtualFileMoveEvent;
+import com.intellij.util.messages.MessageBusConnection;
+import com.intellij.openapi.Disposable;
 
 import java.awt.Color;
 import java.util.*;
@@ -16,12 +21,39 @@ import java.util.*;
     name = "FileTaggerSettings",
     storages = {@Storage("fileTagger.xml")}
 )
-public final class TagStorageService implements PersistentStateComponent<TagStorageService.State> {
+public final class TagStorageService implements PersistentStateComponent<TagStorageService.State>, Disposable {
     private State myState = new State();
     private final Project project;
+    private final MessageBusConnection messageBusConnection;
 
     public TagStorageService(Project project) {
         this.project = project;
+        this.messageBusConnection = project.getMessageBus().connect();
+        
+        // 添加文件系统监听器
+        VirtualFileManager.getInstance().addVirtualFileListener(new VirtualFileListener() {
+            @Override
+            public void fileMoved(@NotNull VirtualFileMoveEvent event) {
+                String oldPath = event.getOldParent().getPath() + "/" + event.getFileName();
+                String newPath = event.getFile().getPath();
+                handleFileMove(oldPath, newPath);
+            }
+        }, project);
+    }
+
+    // 处理文件移动
+    private void handleFileMove(String oldPath, String newPath) {
+        Set<String> tags = myState.fileTagsMap.get(oldPath);
+        if (tags != null && !tags.isEmpty()) {
+            myState.fileTagsMap.remove(oldPath);
+            myState.fileTagsMap.put(newPath, new HashSet<>(tags));
+            ProjectView.getInstance(project).refresh();
+        }
+    }
+
+    @Override
+    public void dispose() {
+        messageBusConnection.disconnect();
     }
 
     public static class TagInfo {
