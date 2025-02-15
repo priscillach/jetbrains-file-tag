@@ -274,15 +274,11 @@ public class TagManagerDialog extends DialogWrapper {
             String newTag = newTagField.getText().trim();
             if (!newTag.isEmpty()) {
                 if (tagService.addTag(newTag)) {
-                    selectedTags.add(newTag);  // 添加到选中集合
-                    // 直接添加到模型末尾，而不是重新加载所有标签
+                    selectedTags.add(newTag);
                     TagInfo newTagInfo = tagService.getTagInfo(newTag);
                     availableTagsModel.addElement(new TagListItem(newTagInfo, true));
                     newTagField.setText("");
-                    SwingUtilities.invokeLater(() -> {
-                        int lastIndex = availableTagsModel.size() - 1;
-                        availableTagsList.ensureIndexIsVisible(lastIndex);
-                    });
+                    updateAvailableTagsList();
                 } else {
                     Messages.showErrorDialog(
                         project,
@@ -314,15 +310,14 @@ public class TagManagerDialog extends DialogWrapper {
                             "Duplicate Tag"
                         );
                     } else {
-                        // 更新选中状态
                         if (selectedTags.remove(oldName)) {
                             selectedTags.add(newName);
                         }
-                        // 更新列表项，保持位置和勾选状态
                         int index = availableTagsList.getSelectedIndex();
                         boolean wasChecked = item.checked;
                         TagInfo updatedInfo = tagService.getTagInfo(newName);
                         availableTagsModel.setElementAt(new TagListItem(updatedInfo, wasChecked), index);
+                        updateAvailableTagsList();
                     }
                 }
             }
@@ -343,32 +338,13 @@ public class TagManagerDialog extends DialogWrapper {
                 );
                 
                 if (result == Messages.YES) {
-                    // 保存未被删除的标签的勾选状态
-                    Map<String, Boolean> checkedState = new HashMap<>();
-                    for (int i = 0; i < availableTagsModel.size(); i++) {
-                        TagListItem item = availableTagsModel.getElementAt(i);
-                        if (!selectedItems.contains(item)) {
-                            checkedState.put(item.tagInfo.name, item.checked);
-                        }
-                    }
-                    
-                    // 删除标签
+                    // 删除选中的标签
                     for (TagListItem item : selectedItems) {
                         selectedTags.remove(item.tagInfo.name);
                         tagService.deleteTag(item.tagInfo.name);
+                        availableTagsModel.removeElement(item);
                     }
-                    
-                    // 重新加载标签并恢复勾选状态
-                    loadTags();
-                    
-                    // 恢复未被删除的标签的勾选状态
-                    for (int i = 0; i < availableTagsModel.size(); i++) {
-                        TagListItem item = availableTagsModel.getElementAt(i);
-                        if (checkedState.containsKey(item.tagInfo.name)) {
-                            item.checked = checkedState.get(item.tagInfo.name);
-                        }
-                    }
-                    availableTagsList.repaint();
+                    updateAvailableTagsList();
                 }
             }
         });
@@ -478,9 +454,17 @@ public class TagManagerDialog extends DialogWrapper {
                         tagService.getTagUsageCount(a.tagInfo.name),
                         tagService.getTagUsageCount(b.tagInfo.name)
                     );
+                    // 文件数相同时，按创建时间排序
+                    if (result == 0) {
+                        result = Long.compare(a.tagInfo.order, b.tagInfo.order);
+                    }
                     break;
                 case MODIFIED_TIME:
                     result = Long.compare(a.tagInfo.timestamp, b.tagInfo.timestamp);
+                    // 修改时间相同时，按创建时间排序
+                    if (result == 0) {
+                        result = Long.compare(a.tagInfo.order, b.tagInfo.order);
+                    }
                     break;
                 case CREATE_TIME:
                 default:
