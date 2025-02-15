@@ -1,0 +1,59 @@
+<idea-plugin>
+    <id>com.weakviord.filetagger</id>
+    <name>File Tagger</name>
+    <vendor>weakviord</vendor>
+
+    <description><![CDATA[
+        File Tagger plugin for JetBrains IDEs.
+        
+        Features:
+        <ul>
+            <li>Add, edit, and remove tags for files and directories</li>
+            <li>Tags are displayed in different colors in the project view</li>
+            <li>Supports both light and dark themes</li>
+            <li>Easy tag management through context menu</li>
+        </ul>
+        
+        Supported IDEs:
+        <ul>
+            <li>IntelliJ IDEA</li>
+            <li>WebStorm</li>
+            <li>PyCharm</li>
+            <li>PhpStorm</li>
+            <li>GoLand</li>
+            <li>Rider</li>
+            <li>CLion</li>
+            <li>RubyMine</li>
+            <li>AppCode</li>
+            <li>DataGrip</li>
+            <li>Android Studio</li>
+        </ul>
+    ]]></description>
+
+    <!-- 修改依赖，只保留基础平台依赖 -->
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.lang</depends>
+
+    <!-- 可选依赖，根据不同 IDE 自动启用 -->
+    <depends optional="true" config-file="java-features.xml">com.intellij.modules.java</depends>
+    <depends optional="true" config-file="python-features.xml">com.intellij.modules.python</depends>
+    <depends optional="true" config-file="go-features.xml">com.intellij.modules.go</depends>
+    <depends optional="true" config-file="php-features.xml">com.intellij.modules.php</depends>
+    <depends optional="true" config-file="ruby-features.xml">com.intellij.modules.ruby</depends>
+    <depends optional="true" config-file="rider-features.xml">com.intellij.modules.rider</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <projectViewNodeDecorator implementation="com.weakviord.filetagger.ui.FileTagDecorator"/>
+        <projectService serviceImplementation="com.weakviord.filetagger.service.TagStorageService"/>
+    </extensions>
+
+    <actions>
+        <action id="FileTagger.EditTags"
+                class="com.weakviord.filetagger.action.EditTagsAction"
+                text="Edit Tags"
+                description="Edit tags for the selected file"
+                icon="AllIcons.Actions.Edit">
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
+        </action>
+    </actions>
+</idea-plugin> 

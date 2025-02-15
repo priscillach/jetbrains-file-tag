@@ -48,8 +48,7 @@ tasks {
             • Easy tag management through context menu
         """.trimIndent())
         changeNotes.set("""
-            1.0.7:
-            • Fix the bug that tags being invalid when the file and directory is renamed or moved
+            1.0.7: Fix the bug when moving or renaming files, and new feature tag sorting
         """.trimIndent())
     }
 

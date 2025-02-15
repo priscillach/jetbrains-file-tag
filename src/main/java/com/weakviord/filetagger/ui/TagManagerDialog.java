@@ -26,6 +26,8 @@ import java.util.List;
 import com.intellij.ui.ColorPicker;
 import com.intellij.ui.ColorPickerListener;
 import com.intellij.ui.JBColor;
+import com.intellij.icons.AllIcons;
+import com.intellij.ide.util.PropertiesComponent;
 
 public class TagManagerDialog extends DialogWrapper {
     private final Project project;
@@ -48,46 +50,73 @@ public class TagManagerDialog extends DialogWrapper {
     private final JBTextField newTagField;
     private final Set<String> selectedTags;
 
+    private enum SortType {
+        CREATE_TIME("Creation Time"),
+        NAME("Tag Name"),
+        FILES("Files Count"),
+        MODIFIED_TIME("Last Modified");
+
+        private final String displayName;
+
+        SortType(String displayName) {
+            this.displayName = displayName;
+        }
+
+        @Override
+        public String toString() {
+            return displayName;
+        }
+    }
+
+    private SortType currentSortType = SortType.CREATE_TIME;
+    private boolean ascending = true;
+
+    // 保存排序设置的键
+    private static final String SORT_TYPE_KEY = "FileTagger.SortType";
+    private static final String SORT_ORDER_KEY = "FileTagger.SortOrder";
+
     public TagManagerDialog(Project project, VirtualFile file) {
         super(project);
         this.project = project;
         this.file = file;
         this.tagService = project.getService(TagStorageService.class);
+        this.selectedTags = new HashSet<>(tagService.getFileTags(file));
         this.availableTagsModel = new DefaultListModel<>();
         this.availableTagsList = new JBList<>(availableTagsModel);
         this.newTagField = new JBTextField();
-        this.selectedTags = new HashSet<>(tagService.getFileTags(file));
+
+        // 恢复上次的排序设置
+        PropertiesComponent props = PropertiesComponent.getInstance(project);
+        String savedSortType = props.getValue(SORT_TYPE_KEY);
+        if (savedSortType != null) {
+            try {
+                currentSortType = SortType.valueOf(savedSortType);
+            } catch (IllegalArgumentException e) {
+                currentSortType = SortType.CREATE_TIME;
+            }
+        }
+        ascending = "true".equals(props.getValue(SORT_ORDER_KEY, "true"));
 
         setTitle("Tag Manager");
         init();
         loadTags();
+        updateAvailableTagsList();
     }
 
     private void loadTags() {
-        // 保存当前的勾选状态
-        Map<String, Boolean> checkedState = new HashMap<>();
-        for (int i = 0; i < availableTagsModel.size(); i++) {
-            TagListItem item = availableTagsModel.getElementAt(i);
-            checkedState.put(item.tagInfo.name, item.checked);
-        }
-        
         availableTagsModel.clear();
-        List<TagInfo> allTags = tagService.getAllTags();        
-        // 按创建顺序排序
-        allTags.sort(Comparator.comparingLong(tag -> tag.order));
-        
-        for (TagInfo tag : allTags) {
-            boolean checked = checkedState.containsKey(tag.name) 
-                ? checkedState.get(tag.name) 
-                : selectedTags.contains(tag.name);
-            availableTagsModel.addElement(new TagListItem(tag, checked));
+        List<TagInfo> allTags = tagService.getAllTags();
+        for (TagInfo tagInfo : allTags) {
+            availableTagsModel.addElement(new TagListItem(tagInfo, selectedTags.contains(tagInfo.name)));
         }
     }
 
     @Override
-    protected @Nullable JComponent createCenterPanel() {
-        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
-        mainPanel.setPreferredSize(new Dimension(500, 300));
+    protected JComponent createCenterPanel() {
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        
+        // 设置首选大小
+        mainPanel.setPreferredSize(new Dimension(500, 600));  // 调整对话框大小
 
         // 自定义列表渲染器
         availableTagsList.setCellRenderer(new ColoredListCellRenderer<>() {
@@ -344,6 +373,50 @@ public class TagManagerDialog extends DialogWrapper {
             }
         });
 
+        // 创建排序面板
+        JPanel sortPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        
+        // 创建排序下拉框
+        DefaultComboBoxModel<SortType> sortTypeModel = new DefaultComboBoxModel<>(SortType.values());
+        JComboBox<SortType> sortTypeCombo = new JComboBox<>(sortTypeModel);
+        sortTypeCombo.setToolTipText("Sort by");
+        sortTypeCombo.setSelectedItem(currentSortType);  // 设置初始选择
+        
+        // 创建升序/降序切换按钮
+        JToggleButton orderToggle = new JToggleButton(
+            ascending ? AllIcons.General.ArrowUp : AllIcons.General.ArrowDown
+        );
+        orderToggle.setSelected(!ascending);  // 设置初始状态
+        orderToggle.setToolTipText(ascending ? "Ascending" : "Descending");
+        
+        // 添加事件监听
+        sortTypeCombo.addActionListener(e -> {
+            currentSortType = (SortType) sortTypeCombo.getSelectedItem();
+            PropertiesComponent.getInstance(project).setValue(SORT_TYPE_KEY, currentSortType.name());
+            updateAvailableTagsList();
+        });
+        
+        orderToggle.addActionListener(e -> {
+            ascending = !ascending;
+            orderToggle.setIcon(ascending ? 
+                AllIcons.General.ArrowUp : 
+                AllIcons.General.ArrowDown
+            );
+            orderToggle.setToolTipText(ascending ? "Ascending" : "Descending");
+            // 修改这里：使用字符串值存储布尔值
+            PropertiesComponent.getInstance(project).setValue(SORT_ORDER_KEY, String.valueOf(ascending));
+            updateAvailableTagsList();
+        });
+        
+        sortPanel.add(new JLabel("Sort by: "));
+        sortPanel.add(sortTypeCombo);
+        sortPanel.add(orderToggle);
+        
+        // 添加到工具栏
+        JPanel toolbarPanel = new JPanel(new BorderLayout());
+        toolbarPanel.add(sortPanel, BorderLayout.EAST);
+        mainPanel.add(toolbarPanel, BorderLayout.NORTH);
+
         return mainPanel;
     }
 
@@ -385,6 +458,42 @@ public class TagManagerDialog extends DialogWrapper {
             Collections.singletonList(listener),
             true
         );
+    }
+
+    private void updateAvailableTagsList() {
+        List<TagListItem> currentItems = new ArrayList<>();
+        for (int i = 0; i < availableTagsModel.getSize(); i++) {
+            currentItems.add(availableTagsModel.getElementAt(i));
+        }
+
+        // 根据选择的排序类型进行排序
+        currentItems.sort((a, b) -> {
+            int result = 0;
+            switch (currentSortType) {
+                case NAME:
+                    result = a.tagInfo.name.compareTo(b.tagInfo.name);
+                    break;
+                case FILES:
+                    result = Integer.compare(
+                        tagService.getTagUsageCount(a.tagInfo.name),
+                        tagService.getTagUsageCount(b.tagInfo.name)
+                    );
+                    break;
+                case MODIFIED_TIME:
+                    result = Long.compare(a.tagInfo.timestamp, b.tagInfo.timestamp);
+                    break;
+                case CREATE_TIME:
+                default:
+                    result = Long.compare(a.tagInfo.order, b.tagInfo.order);
+                    break;
+            }
+            return ascending ? result : -result;
+        });
+
+        availableTagsModel.clear();
+        for (TagListItem item : currentItems) {
+            availableTagsModel.addElement(item);
+        }
     }
 
     @Override
