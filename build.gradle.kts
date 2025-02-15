@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.weakviord"
-version = "1.0.6"
+version = "1.0.7"
 
 repositories {
     mavenCentral()
@@ -40,19 +40,16 @@ tasks {
         untilBuild.set("243.*")
         pluginDescription.set("""
             File Tagger plugin for JetBrains IDEs.
-            
+
             Features:
-            - Add, edit, and remove tags for files and directories
-            - Customize tag colors with support for transparency
-            - Tags are displayed in different colors in the project view
-            - Easy tag management through context menu
+            • Add, edit, and remove tags for files and directories
+            • Customize tag colors with support for transparency
+            • Tags are displayed in different colors in the project view
+            • Easy tag management through context menu
         """.trimIndent())
         changeNotes.set("""
-            Initial release:
-            - Basic tag management functionality
-            - Colorful tag display
-            - Context menu integration
-            - Support for all JetBrains IDEs
+            1.0.7:
+            • Fix the bug that tags being invalid when the file and directory is renamed or moved
         """.trimIndent())
     }
 

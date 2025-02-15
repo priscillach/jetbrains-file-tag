@@ -12,6 +12,8 @@ import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.openapi.vfs.VirtualFileMoveEvent;
 import com.intellij.util.messages.MessageBusConnection;
 import com.intellij.openapi.Disposable;
+import com.intellij.openapi.vfs.VirtualFileEvent;
+import com.intellij.openapi.vfs.VirtualFilePropertyEvent;
 
 import java.awt.Color;
 import java.util.*;
@@ -30,18 +32,56 @@ public final class TagStorageService implements PersistentStateComponent<TagStor
         this.project = project;
         this.messageBusConnection = project.getMessageBus().connect();
         
-        // 添加文件系统监听器
         VirtualFileManager.getInstance().addVirtualFileListener(new VirtualFileListener() {
             @Override
-            public void fileMoved(@NotNull VirtualFileMoveEvent event) {
-                String oldPath = event.getOldParent().getPath() + "/" + event.getFileName();
-                String newPath = event.getFile().getPath();
-                handleFileMove(oldPath, newPath);
+            public void beforePropertyChange(@NotNull VirtualFilePropertyEvent event) {
+                if (VirtualFile.PROP_NAME.equals(event.getPropertyName())) {
+                    VirtualFile file = event.getFile();
+                    String oldPath = file.getParent().getPath() + "/" + event.getOldValue();
+                    String newPath = file.getParent().getPath() + "/" + event.getNewValue();
+                    
+                    if (file.isDirectory()) {
+                        handleDirectoryPathChange(oldPath, newPath);
+                    } else {
+                        handleFileMove(oldPath, newPath);
+                    }
+                }
+            }
+
+            @Override
+            public void beforeFileMovement(@NotNull VirtualFileMoveEvent event) {
+                VirtualFile file = event.getFile();
+                String oldPath = event.getOldParent().getPath() + "/" + file.getName();
+                String newPath = event.getNewParent().getPath() + "/" + file.getName();
+                
+                if (file.isDirectory()) {
+                    handleDirectoryPathChange(oldPath, newPath);
+                } else {
+                    handleFileMove(oldPath, newPath);
+                }
             }
         }, project);
     }
 
-    // 处理文件移动
+    private void handleDirectoryPathChange(String oldDirPath, String newDirPath) {
+        Map<String, Set<String>> updatedMap = new HashMap<>();
+        
+        for (Map.Entry<String, Set<String>> entry : myState.fileTagsMap.entrySet()) {
+            String filePath = entry.getKey();
+            Set<String> tags = entry.getValue();
+            
+            if (filePath.startsWith(oldDirPath + "/")) {
+                String newFilePath = newDirPath + filePath.substring(oldDirPath.length());
+                updatedMap.put(newFilePath, new HashSet<>(tags));
+            } else {
+                updatedMap.put(filePath, tags);
+            }
+        }
+        
+        myState.fileTagsMap = updatedMap;
+        ProjectView.getInstance(project).refresh();
+    }
+
     private void handleFileMove(String oldPath, String newPath) {
         Set<String> tags = myState.fileTagsMap.get(oldPath);
         if (tags != null && !tags.isEmpty()) {
