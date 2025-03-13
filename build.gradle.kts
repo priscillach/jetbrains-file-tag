@@ -37,7 +37,7 @@ tasks {
 
     patchPluginXml {
         sinceBuild.set("231")
-        untilBuild.set("243.*")
+        untilBuild.set("251.*")
         pluginDescription.set("""
             File Tagger plugin for JetBrains IDEs.
 
