@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.weakviord"
-version = "1.0.7"
+version = "1.0.8"
 
 repositories {
     mavenCentral()
@@ -49,6 +49,7 @@ tasks {
         """.trimIndent())
         changeNotes.set("""
             1.0.7: Fix the bug when moving or renaming files, and new feature tag sorting
+            1.0.8: Allow Beta version of IntelliJ IDEA
         """.trimIndent())
     }
 
